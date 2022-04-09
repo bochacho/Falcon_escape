@@ -20,5 +20,5 @@ class Lazer(pygame.sprite.Sprite):
 
     def update(self):
         self.rect.move_ip(-self.speed, 0)
-        if self.rect.right < 0 or self.rect.left  > self.canvas_size[1] :
+        if self.rect.right < 0 or self.rect.left  > self.canvas_size[0] :
             self.kill()
