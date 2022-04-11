@@ -53,6 +53,8 @@ class Player(pygame.sprite.Sprite):
         self.health -= value
         if self.health < 0:
             self.kill()
+            return False
+        return True
     
     def shoot(self):
         lazer = Lazer(self.canvas_size, self.rect.center, 'blue', -1, 10)

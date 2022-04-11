@@ -32,9 +32,11 @@ ADDENEMY = pygame.USEREVENT + 2
 pygame.time.set_timer(ADDENEMY, 1000)
 ADDSTAR = pygame.USEREVENT + 3
 pygame.time.set_timer(ADDSTAR, 100)
+ADDSHOOT = pygame.USEREVENT + 4
+pygame.time.set_timer(ADDSHOOT, 500)
 
 
-player = Player(CANVAS_SIZE, 10)
+player = Player(CANVAS_SIZE, 15)
 meteor = Meteor(CANVAS_SIZE)
 star = Star(CANVAS_SIZE)
 enemy = Enemy(CANVAS_SIZE, 3, (0,0))
@@ -93,10 +95,16 @@ while running:
             if len(enemies) < 2:
                 start_x = WIDTH + 20 
                 start_y = HEIGHT/(num_enemies + 1)
-                for i in range(num_enemies):
+                for i in range(1, num_enemies + 1):
                     enemy = Enemy(CANVAS_SIZE, 3, (start_x, start_y*i))
                     enemies.add(enemy)
                     all_sprites.add(enemy)
+        elif event.type == ADDSHOOT:
+            for enemy in enemies:
+                if random.choice([True, False]):
+                    lazer = enemy.shoot()
+                    enemy_lazer.add(lazer)
+                    all_sprites.add(lazer)
 
     screen.fill((0,0,0))
 
@@ -104,13 +112,20 @@ while running:
     player.update(key_pressed)
     meteors.update()
     stars.update()
+    '''    
     for i in enemies:
-        i.update_x(WIDTH)
-        i.update_y(HEIGHT)
+        i.update_x()
+        i.update_y()
+    '''
+    for enemy in enemies:
+        if not enemy.on_screen:
+            enemy.get_on_screen()
+        #else:
+        #    enemy.update()
+    
     player_lazers.update()
     enemy_lazer.update()
 
-    #make enemies shoot randomly
     players.add(player)
     all_sprites.add(player)
 
@@ -119,18 +134,30 @@ while running:
     
     #collission detection
     player_collission_meteor = pygame.sprite.groupcollide(players, meteors, False, False)
-    #player_collission_lazer = pygame.sprite.spritecollide(players, enemy_lazer, False, False)
+    player_collission_lazer = pygame.sprite.groupcollide(players, enemy_lazer, False, False)
     enemy_collission_lazer = pygame.sprite.groupcollide(enemies, player_lazers, False, False)
     meteor_collission_lazer = pygame.sprite.groupcollide(meteors, player_lazers, False, False)
 
     if player_collission_meteor:
         for player in player_collission_meteor:
-            player.damage(1)
-            screen.blit(explosion, (player.rect.x - player.rect.width/2, player.rect.y - player.rect.height/2)  )
-            running = False
+            alive = player.damage(1)
+            for meteor in player_collission_meteor[player]:
+                meteor.kill()
+            screen.blit(tiny_explosion, (player.rect.centerx - player.rect.width/2, player.rect.centery- player.rect.height/2)  )
+            if not alive:
+                screen.blit(explosion, (player.rect.x - player.rect.width/2, player.rect.y - player.rect.height/2))
+                running = False
 
-    #if player_collission_lazer:
-     #   player.damage(2)
+    if player_collission_lazer:
+        for player in player_collission_lazer:
+            alive = player.damage(2)
+            for lazer in player_collission_lazer[player]:
+                lazer.kill()
+            screen.blit(tiny_explosion, (player.rect.centerx - player.rect.width/2, player.rect.centery- player.rect.height/2)  )
+            if not alive:
+                screen.blit(explosion, (player.rect.x - player.rect.width/2, player.rect.y - player.rect.height/2))
+                running = False
+
     if enemy_collission_lazer:
         for enemy in enemy_collission_lazer.keys():
             enemy.damage(2)
